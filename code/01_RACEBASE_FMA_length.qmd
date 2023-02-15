@@ -1,0 +1,91 @@
+---
+title: "FMA Length Verification"
+author: "Chris Anderson, Emily Markowitz & Duane Stevenson"
+format: pdf
+documentclass: report
+classoption: twocolumn
+lof: false
+lot: false
+geometry:
+  - top=13mm
+  - bottom=13mm
+  - left=13mm
+  - right=13mm
+  - heightrounded
+fontfamily: libertinus
+colorlinks: true
+output-dir: "./output/"
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.pos = 'H')
+
+library(RODBC)
+library(getPass)
+library(tidyverse)
+library(here)
+library(zoo)
+library(tinytex)
+
+number_ticks <- function(n) {function(limits) pretty(limits, n)}
+```
+
+```{r, echo=FALSE, include=FALSE}
+#Query to use raw length data from RACEBASE to inform FMA length ranges
+get.connected <- function(schema='AFSC'){(echo=FALSE)
+ username <- getPass(msg = "Enter your ORACLE Username: ")
+ password <- getPass(msg = "Enter your ORACLE Password: ")
+ channel  <- RODBC::odbcConnect(paste(schema),paste(username),paste(password), believeNRows=FALSE)
+}
+
+channel <- get.connected()
+
+spcodes  <-
+  sqlQuery(channel,paste("SELECT * FROM RACEBASE.SPECIES")) 
+
+fmacodes  <-
+  sqlQuery(channel,paste("SELECT * FROM NORPAC.ATL_LOV_SPECIES_CODE"))
+
+sp.code <- read.csv(here::here("species_lengths.csv"), header = TRUE)
+```
+
+```{r, echo=FALSE, include=FALSE}
+src <- list()
+for(i in 1:nrow(sp.code)){
+  RACE <- sp.code$RACE.Species.Code[i]
+  FMA <- sp.code$FMA_SPECIES_CODE[i]
+  NAME <- sp.code$SPECIES_NAME[i]
+  src[[i]] <- knitr::knit_expand(here::here('02_lengths-template.qmd'))
+}
+```
+
+\onecolumn
+
+# Introduction
+###### The following document was created to provide the Fisheries Management and Analysis (FMA) Division of the Alaska Fisheries Science Center (AFSC) with records and historical data of fish encountered during the annual surveys of the Resource Assessment and Conservation Engineering (RACE) Division of the AFSC. Species found in this list were supplied by FMA and can be found in a CSV file in the projects code. Data for these species was pulled from the RACE database from 2005 to present. This was done to enure that data used was not outdated, and only encompassed the last ~20 years of data.
+
+
+###### Findings for each species are provided in 4 ways; Firtly the number of records is provided. In a number of species the data contained in the respective database (RACE or FMA) is limited, and have a small number of instances. The total numbers are provided to give context to data and to help reviewers determine which method below may best fit their use. 
+
+
+###### Secondly a minimum and maximum lengths are listed. These are lengths where the pecentage of fish encountered is >0.01% of the total number of records. This ensures that the extrememly small or large individuals caught in a single instance are not reported and these values are where we start to see multiple records of this size. 
+
+
+###### Thirdly a Rolling Mean Minimum and Rolling Mean Maxmium are included. These values are largely similar to the minimum and maximums listed, but pecentages are averaged with surrounding values to eliminate small spikes of very small or large organisms providing false results. This ensures that the minimums and maximums are closer to the bulk of observered lengths. For example, Giant Grenadier provides a minimum value of 3 cm, but this is due to a small group (~3 individuals) that cause a small spike that exceeds this 0.01% threshold. By averaging the values around this small spike and slightly increasing the threshold (to 0.0175%) this spike is eliminated and a new minimum is closer to 15 cm.
+
+
+###### Fourthly a 95% confidence interval is provided. These represent the lengths that 95% of all encountered species on RACE surveys or Observer Data fall into. 
+
+
+###### Lastly a graph is provided to visually assess these values and see where the rises and falls in the length data occur. In this way a reviewer can see where the greatest percentage of lengths starts to increase or decrease and see where the previously listed values fall on this curve. The 95% confidence interval is shaded in this plot in blue in RACE data, and red in FMA data.
+
+\newpage
+
+```{=tex}
+\pagebreak
+```
+
+\twocolumn
+
+`r paste(knitr::knit(text = unlist(src)), collapse = '\newpage')`
