@@ -1,0 +1,176 @@
+```{r, echo=FALSE, include=FALSE}
+
+RACE.rawlength  <-
+  sqlQuery(channel,query = paste0("SELECT * FROM RACE_DATA.V_EXTRACT_FINAL_LENGTHS A WHERE ((A.SPECIES_CODE = ",{{RACE}},"))"))
+
+FMA.rawlength  <-
+  sqlQuery(channel,query = paste0("SELECT species_code, length_size, frequency  FROM NORPAC.ATL_LENGTH WHERE ((SPECIES_CODE = ",{{FMA}},"))"))
+
+evaltf <- ifelse(nrow(RACE.rawlength) > 0, TRUE, FALSE)
+
+str0 <- "This Species does not have lengths in the database"
+
+evaltf <- ifelse(nrow(FMA.rawlength) > 0, TRUE, FALSE)
+
+str1 <- "This Species does not have lengths in the database"
+
+```
+
+```{r include=FALSE, eval=evaltf}
+#| label: var-{{RACE}}-{{NAME}}
+RACE.rawlength2 <- RACE.rawlength %>% group_by(LENGTH) %>% mutate(total_lengths = sum(FREQUENCY)) # Total for each length class
+
+lbh <- RACE.rawlength2 %>% select(SPECIES_CODE, LENGTH, total_lengths)
+lbh <- lbh[!duplicated(lbh$LENGTH),] # Remove duplicates
+lbh$percent <- 100*(lbh$total_lengths/sum(lbh$total_lengths)) # Add percent column
+lbh <- lbh[order(lbh$LENGTH),] # Order of increasing length
+lbh$rolling <- zoo::rollmeanr(lbh$percent, k = 2, fill = NA)
+lbh$rolling <- zoo::rollmeanr(lbh$percent, k = 2, fill = lbh$percent)
+
+
+records <- formatC(x = sum(RACE.rawlength$FREQUENCY), digits = 0, big.mark = ",", drop0trailing = TRUE)
+
+race.range <- filter(lbh, percent > 0.01)
+race.range2 <- filter(lbh, rolling >0.0175)
+
+race.stdmin <- min(race.range$LENGTH)/10
+race.stdmax <- max(race.range$LENGTH)/10
+
+# expand lengths dataset by freq, so that there is no freq column
+temp <- lbh[rep(x = 1:nrow(lbh), lbh$total_lengths), ]
+race.q2_5 <- quantile(x = temp$LENGTH, probs = 0.025, na.rm = TRUE)
+race.q97_5 <- quantile(x = temp$LENGTH, probs = 0.975, na.rm = TRUE)
+
+# add a getmode function
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+mode0 <- getmode(v = temp$LENGTH)
+median0 <- median(x = temp$LENGTH, na.rm = TRUE)
+mean0 <- mean(lbh$LENGTH, na.rm = TRUE)
+  
+race.rollmin <- min(race.range2$LENGTH)/10
+race.rollmax <- max(race.range2$LENGTH)/10
+
+str0 <- paste0("Number of Records since 2005: **", records,"**  
+  
+Minimum: **", race.stdmin," cm**  |  Maximum: **", race.stdmax," cm**  
+Rolling Min: **", race.rollmin," cm**  |  Rolling Max: **", race.rollmax," cm**  
+95% Interval: **", (race.q2_5/10)," cm** to **", (race.q97_5/10)," cm**")
+
+```
+
+```{r include=FALSE, eval=evaltf}
+#| label: var-{{FMA}}-{{NAME}}
+FMA.rawlength2 <- FMA.rawlength %>% group_by(LENGTH_SIZE) %>% mutate(total_lengths = sum(FREQUENCY)) # Total for each length class
+
+atl <- FMA.rawlength2 %>% select(SPECIES_CODE, LENGTH_SIZE, total_lengths)
+atl <- atl[!duplicated(atl$LENGTH_SIZE),] # Remove duplicates
+atl$percent <- 100*(atl$total_lengths/sum(atl$total_lengths)) # Add percent column
+atl <- atl[order(atl$LENGTH_SIZE),] # Order of increasing length
+
+fma.records <- formatC(x = sum(FMA.rawlength$FREQUENCY), digits = 0, big.mark = ",", drop0trailing = TRUE)
+
+fma.range <- filter(atl, percent > 0.01)
+
+atl$rolling <- zoo::rollmeanr(atl$percent, k = 2, fill = NA)
+atl$rolling <- zoo::rollmeanr(atl$percent, k = 2, fill = atl$percent)
+
+fma.range2 <- filter(atl, rolling >0.0175)
+
+fma.stdmin <- min(fma.range$LENGTH_SIZE)
+fma.stdmax <- max(fma.range$LENGTH_SIZE)
+
+# expand lengths dataset by freq, so that there is no freq column
+temp1 <- atl[rep(x = 1:nrow(atl), atl$total_lengths), ]
+fma.q2_5 <- quantile(x = temp1$LENGTH_SIZE, probs = 0.025, na.rm = TRUE)
+fma.q97_5 <- quantile(x = temp1$LENGTH_SIZE, probs = 0.975, na.rm = TRUE)
+
+# add a getmode function
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+mode1 <- getmode(v = temp$LENGTH_SIZE)
+median1 <- median(x = temp1$LENGTH_SIZE, na.rm = TRUE)
+mean1 <- mean(atl$LENGTH_SIZE, na.rm = TRUE)
+  
+fma.rollmin <- min(fma.range2$LENGTH_SIZE)
+fma.rollmax <- max(fma.range2$LENGTH_SIZE)
+
+str1 <- paste0("Number of Records: **", fma.records,"**  
+  
+Minimum: **", fma.stdmin," cm**  |  Maximum: **", fma.stdmax," cm**  
+Rolling Min: **", fma.rollmin," cm**  |  Rolling Max: **", fma.rollmax," cm**  
+95% Interval: **", (fma.q2_5)," cm** to **", (fma.q97_5)," cm**")
+```
+
+# Species: {{NAME}}
+#### RACE DATA
+`r str0`
+
+```{r, echo=FALSE, eval=evaltf}
+#| label: fig-second-{{RACE}}
+#| fig-cap: 'RACE database lengths for {{NAME}} lengths as a percentage of recorded individuals. The shaded area is within the 95th percent confidence interval. '
+
+lbh <- lbh %>%
+  mutate(area = (LENGTH >= race.q97_5 | LENGTH < race.q2_5))
+
+# line0 <- data.frame(x = c(mode0, median0, mean0),
+#                     label = c("mode", "median", "mean"))
+
+# line0 <- data.frame(x = mean0)
+
+ggplot(data = lbh, aes(x = LENGTH, y = percent)) + 
+  # geom_vline(data = line0, mapping = aes(xintercept = x, color = label), linetype = "dashed", size = 3) +
+  # geom_vline(data = line0, mapping = aes(xintercept = x), linetype = "dashed", linewidth = 0.75) +
+  # scale_colour_brewer(palette = "Greys") +
+  geom_line() + 
+  ylab("Percentage (%)") + 
+  scale_x_continuous(breaks=number_ticks(10)) + 
+  xlab("Length (mm)") +
+  geom_ribbon(data = subset(lbh, !(LENGTH >= race.q97_5 | LENGTH <= race.q2_5)), 
+              mapping = aes(ymax = percent), ymin = 0, fill = "blue", alpha = 0.25, show.legend = FALSE) +
+  theme_bw()
+
+```
+
+\newpage
+
+#### FMA DATA
+`r str1`
+
+```{r, echo=FALSE, eval=evaltf}
+#| label: fig-second-{{FMA}}
+#| fig-cap: 'FMA database lengths for {{NAME}} as a percentage of recorded individuals. The shaded area is within the 95th percent confidence interval. '
+
+atl <- atl %>%
+  mutate(area = (LENGTH_SIZE >= fma.q97_5 | LENGTH_SIZE < fma.q2_5))
+
+# line1 <- data.frame(x = c(mode1, median1, mean1), 
+#                     label = c("mode", "median", "mean"))
+
+# line1 <- data.frame(x = mean1)
+
+ggplot(data = atl, aes(x = LENGTH_SIZE, y = percent)) + 
+  # geom_vline(data = line1, mapping = aes(xintercept = x, color = label), linetype = "dashed", size = 3) +
+  # geom_vline(data = line1, mapping = aes(xintercept = x), linetype = "dashed", linewidth = 0.75) +
+  # scale_colour_brewer(palette = "Greys") +
+  geom_line() + 
+  ylab("Percentage (%)") + 
+  scale_x_continuous(breaks=number_ticks(10)) + 
+  xlab("Length (cm)") +
+  geom_ribbon(data = subset(atl, !(LENGTH_SIZE >= fma.q97_5 | LENGTH_SIZE <= fma.q2_5)), 
+              mapping = aes(ymax = percent), ymin = 0, fill = "red", alpha = 0.25, show.legend = FALSE) +
+  theme_bw()
+
+```
+
+\newpage
+
+```{=tex}
+\pagebreak
+```

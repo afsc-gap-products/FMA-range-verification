@@ -1,0 +1,42 @@
+
+```{r collect-spp-info-{{RACE}}}
+
+RACE.rawweight  <-
+  sqlQuery(channel,query = paste0("SELECT SPECIES_CODE, SEX, WEIGHT FROM RACEBASE.SPECIMEN WHERE SPECIES_CODE = ",{{RACE}}, ";"))
+
+# Testing Line to Grab P.Cod
+# RACE.rawweight  <-
+#   sqlQuery(channel,query = paste0("SELECT SPECIES_CODE, SEX, WEIGHT FROM RACEBASE.SPECIMEN WHERE SPECIES_CODE = 30030"))
+
+evaltf <- ifelse(nrow(RACE.rawweight) > 0, TRUE, FALSE)
+
+str0 <- "This Species does not have lengths in the database"
+
+```
+
+```{r math-spp-info-{{RACE}}, eval=evaltf}
+#| label: var-{{RACE}}-{{NAME}}
+# RACE.rawweight2 <- na.omit(RACE.rawweight)
+# RACE.rawweight2 <- RACE.rawweight2[RACE.rawweight2$WEIGHT != 0, ]
+
+race_wt.records <- nrow(RACE.rawweight)
+
+
+RACE.rawweight$WEIGHT <- (RACE.rawweight$WEIGHT / 1000)
+
+race_wt.min <- min(RACE.rawweight$WEIGHT, na.rm = TRUE)
+race_wt.max <- max(RACE.rawweight$WEIGHT, na.rm = TRUE)
+
+race_wt.q2_5 <- quantile(x = RACE.rawweight$WEIGHT, probs = 0.025, na.rm = TRUE)
+race_wt.q97_5 <- quantile(x = RACE.rawweight$WEIGHT, probs = 0.975, na.rm = TRUE)
+
+
+str0 <- paste0("Number of records: **", race_wt.records, "**  
+Minimum Weight: **", race_wt.min," kg**  |  Maximum Weight: **", race_wt.max," kg**  
+95% Interval: **", race_wt.q2_5," kg** to **", race_wt.q97_5," kg**")
+
+```
+
+# Species: {{NAME}}
+#### RACE DATA
+`r str0`
