@@ -1,16 +1,16 @@
 ```{r, echo=FALSE, include=FALSE}
 
-RACE.rawlength  <-
+RACE_rawlength  <-
   sqlQuery(channel,query = paste0("SELECT * FROM RACE_DATA.V_EXTRACT_FINAL_LENGTHS A WHERE ((A.SPECIES_CODE = ",{{RACE}},"))"))
 
-FMA.rawlength  <-
+FMA_rawlength  <-
   sqlQuery(channel,query = paste0("SELECT species_code, length_size, frequency  FROM NORPAC.ATL_LENGTH WHERE ((SPECIES_CODE = ",{{FMA}},"))"))
 
-evaltf <- ifelse(nrow(RACE.rawlength) > 0, TRUE, FALSE)
+evaltf <- ifelse(nrow(RACE_rawlength) > 0, TRUE, FALSE)
 
 str0 <- "This Species does not have lengths in the database"
 
-evaltf <- ifelse(nrow(FMA.rawlength) > 0, TRUE, FALSE)
+evaltf <- ifelse(nrow(FMA_rawlength) > 0, TRUE, FALSE)
 
 str1 <- "This Species does not have lengths in the database"
 
@@ -18,9 +18,9 @@ str1 <- "This Species does not have lengths in the database"
 
 ```{r include=FALSE, eval=evaltf}
 #| label: var-{{RACE}}-{{NAME}}
-RACE.rawlength2 <- RACE.rawlength %>% group_by(LENGTH) %>% mutate(total_lengths = sum(FREQUENCY)) # Total for each length class
+RACE_rawlength2 <- RACE_rawlength %>% group_by(LENGTH) %>% mutate(total_lengths = sum(FREQUENCY)) # Total for each length class
 
-lbh <- RACE.rawlength2 %>% select(SPECIES_CODE, LENGTH, total_lengths)
+lbh <- RACE_rawlength2 %>% select(SPECIES_CODE, LENGTH, total_lengths)
 lbh <- lbh[!duplicated(lbh$LENGTH),] # Remove duplicates
 lbh$percent <- 100*(lbh$total_lengths/sum(lbh$total_lengths)) # Add percent column
 lbh <- lbh[order(lbh$LENGTH),] # Order of increasing length
@@ -28,7 +28,7 @@ lbh$rolling <- zoo::rollmeanr(lbh$percent, k = 2, fill = NA)
 lbh$rolling <- zoo::rollmeanr(lbh$percent, k = 2, fill = lbh$percent)
 
 
-records <- formatC(x = sum(RACE.rawlength$FREQUENCY), digits = 0, big.mark = ",", drop0trailing = TRUE)
+records <- formatC(x = sum(RACE_rawlength$FREQUENCY), digits = 0, big.mark = ",", drop0trailing = TRUE)
 
 race.range <- filter(lbh, percent > 0.01)
 race.range2 <- filter(lbh, rolling >0.0175)
@@ -64,14 +64,14 @@ Rolling Min: **", race.rollmin," cm**  |  Rolling Max: **", race.rollmax," cm**
 
 ```{r include=FALSE, eval=evaltf}
 #| label: var-{{FMA}}-{{NAME}}
-FMA.rawlength2 <- FMA.rawlength %>% group_by(LENGTH_SIZE) %>% mutate(total_lengths = sum(FREQUENCY)) # Total for each length class
+FMA_rawlength22 <- FMA_rawlength2 %>% group_by(LENGTH_SIZE) %>% mutate(total_lengths = sum(FREQUENCY)) # Total for each length class
 
-atl <- FMA.rawlength2 %>% select(SPECIES_CODE, LENGTH_SIZE, total_lengths)
+atl <- FMA_rawlength22 %>% select(SPECIES_CODE, LENGTH_SIZE, total_lengths)
 atl <- atl[!duplicated(atl$LENGTH_SIZE),] # Remove duplicates
 atl$percent <- 100*(atl$total_lengths/sum(atl$total_lengths)) # Add percent column
 atl <- atl[order(atl$LENGTH_SIZE),] # Order of increasing length
 
-fma.records <- formatC(x = sum(FMA.rawlength$FREQUENCY), digits = 0, big.mark = ",", drop0trailing = TRUE)
+fma.records <- formatC(x = sum(FMA_rawlength2$FREQUENCY), digits = 0, big.mark = ",", drop0trailing = TRUE)
 
 fma.range <- filter(atl, percent > 0.01)
 

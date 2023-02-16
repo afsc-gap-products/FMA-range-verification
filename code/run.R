@@ -5,7 +5,8 @@
 
 # Load source files ------------------------------------------------------------
 source(file = here::here("code", "functions.R"))
-channel <- get.connected()
+channel <- get.connected() # Why here and not in the functions?
+source(file = here::here("code", "data_dl.R")) # This correct to run here?
 source(file = here::here("code", "data.R"))
 
 # Create output csv ------------------------------------------------------------

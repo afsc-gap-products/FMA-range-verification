@@ -1,6 +1,4 @@
-
-
-# Load libaries and funcitons --------------------------------------------------
+# Load libraries and functions --------------------------------------------------
 
 PKG <- c(
   "RODBC", 
