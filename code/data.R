@@ -202,6 +202,7 @@ file_paths <- data.frame(
   table_metadata = c(Sys.Date()) 
 )
 
+## Code from separate project for reference
 # metadata_column = data.frame(
 #   metadata_colname = "DUMMY", 
 #   metadata_colname_long = "example dummy column", 
@@ -212,10 +213,10 @@ file_paths <- data.frame(
 oracle_upload(
   file_paths = file_paths, 
   channel = channel, 
-  metadata_column = metadata_column,
+  #metadata_column = metadata_column,
   schema = "ANDERSONC")
 
-RODBC::sqlQuery(channel = channel,
-                  query = paste0('grant select on ANDERSONC.FMA_RANGE_VERIFICATION
-                                  to GAP_PRODUCTS, NORPAC;'))
-
+# RODBC::sqlQuery(channel = channel,
+#                   query = paste0('grant select on ANDERSONC.FMA_RANGE_VERIFICATION
+#                                   to GAP_PRODUCTS, NORPAC;'))
+# 
