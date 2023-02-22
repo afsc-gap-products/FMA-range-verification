@@ -215,8 +215,3 @@ oracle_upload(
   channel = channel, 
   #metadata_column = metadata_column,
   schema = "ANDERSONC")
-
-# RODBC::sqlQuery(channel = channel,
-#                   query = paste0('grant select on ANDERSONC.FMA_RANGE_VERIFICATION
-#                                   to GAP_PRODUCTS, NORPAC;'))
-# 

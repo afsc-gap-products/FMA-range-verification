@@ -39,5 +39,6 @@ vignettes/*.pdf
 .Renviron
 
 *.csv
+!species_lengths.csv
 /output/
 /data/
