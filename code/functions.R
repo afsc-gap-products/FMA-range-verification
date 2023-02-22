@@ -27,3 +27,5 @@ get.connected <- function(schema='AFSC'){(echo=FALSE)
   channel  <- RODBC::odbcConnect(paste(
     schema),paste(username),paste(password), believeNRows=FALSE)
 }
+
+channel <- get.connected()
