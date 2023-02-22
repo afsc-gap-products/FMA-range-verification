@@ -3,11 +3,6 @@
 sp.codes <- readr::read_csv(file = here::here("code", "species_lengths.csv")) %>% 
   janitor::clean_names()
 
-# Download species codes -------------------------------------------------------
-
-# spcodes  <-
-#   sqlQuery(channel,paste("SELECT * FROM RACEBASE.SPECIES"))  %>% 
-#   janitor::clean_names()
 
 
 # Download cruise data ---------------------------------------------------------
@@ -30,10 +25,11 @@ cruise  <-
   dplyr::left_join(x = ., 
                    y = surveys, 
                    by = "survey_definition_id") %>%
-  dplyr::filter(!(year %in% c(2020,2023))) # check it later! 
+  dplyr::filter(!is.na(cruisejoin)) # remove NA in cruisejoin (uncompleted surveys like 2020, or current year)
 
 
-# Download weight data ---------------------------------------------------------
+
+# Download Length data ---------------------------------------------------------
 
 RACE_rawweight  <-
   RODBC::sqlQuery(channel,query = 
@@ -42,13 +38,19 @@ RACE_rawweight  <-
                            paste(sp.codes$race_species_code, collapse = ", "),");")) %>% 
   janitor::clean_names() 
 
-# Download length data ---------------------------------------------------------
+fma_rawweight  <-
+  RODBC::sqlQuery(channel,query = 
+                    paste0("SELECT SPECIES_CODE, SPECIES_NUMBER, SPECIES_WEIGHT FROM NORPAC.ATL_SPECIES_COMPOSITION 
+                    WHERE SPECIES_CODE IN (",
+                           paste(sp.codes$fma_species_code, collapse = ", "),");")) %>% 
+  janitor::clean_names()
 
-# RACE.rawlength  <-
-#   RODBC::sqlQuery(channel,query = 
-#              paste0("SELECT * FROM RACE_DATA.V_EXTRACT_FINAL_LENGTHS A WHERE ((A.SPECIES_CODE IN (",
-#                     paste(sp.codes$race_species_code, collapse = ", "),");")) %>% 
-#   janitor::clean_names()
+readr::write_csv(fma_rawweight, here::here("data", "fma_w_data.csv"))
+
+
+
+
+# Download length data ---------------------------------------------------------
 
 RACE_rawlength  <-
   RODBC::sqlQuery(channel,query = 
@@ -62,7 +64,17 @@ RACE_rawlength  <-
                    by = c("region", "cruise", "vessel" = "vessel_id"))
 
 
-# Join tables together ---------------------------------------------------------
+fma_rawlength  <-
+  RODBC::sqlQuery(channel,query = 
+                    paste0("SELECT * FROM NORPAC.ATL_LENGTH WHERE SPECIES_CODE IN (",
+                           paste(sp.codes$fma_species_code, collapse = ", "),");")) %>% 
+  janitor::clean_names()
+
+readr::write_csv(fma_rawlength, here::here("data", "fma_l_data.csv"))
+
+
+
+# Join RACE tables together ----------------------------------------------------
 
 specimen_data <- 
   dplyr::bind_rows(RACE_rawlength %>% 
@@ -80,24 +92,3 @@ specimen_data <-
     by = "cruisejoin")
 
 readr::write_csv(specimen_data, here::here("data", "specimen_data.csv"))
-
-# FMA Length data --------------------------------------------------------------
-
-fma_rawlength  <-
-  RODBC::sqlQuery(channel,query = 
-                    paste0("SELECT * FROM NORPAC.ATL_LENGTH WHERE SPECIES_CODE IN (",
-                           paste(sp.codes$fma_species_code, collapse = ", "),");")) %>% 
-  janitor::clean_names()
-
-readr::write_csv(fma_rawlength, here::here("data", "fma_l_data.csv"))
-
-# FMA Weight Data --------------------------------------------------------------
-
-fma_rawweight  <-
-  RODBC::sqlQuery(channel,query = 
-                    paste0("SELECT SPECIES_CODE, SPECIES_NUMBER, SPECIES_WEIGHT FROM NORPAC.ATL_SPECIES_COMPOSITION 
-                    WHERE SPECIES_CODE IN (",
-                           paste(sp.codes$fma_species_code, collapse = ", "),");")) %>% 
-  janitor::clean_names()
-
-readr::write_csv(fma_rawweight, here::here("data", "fma_w_data.csv"))

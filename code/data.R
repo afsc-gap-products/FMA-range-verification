@@ -6,28 +6,19 @@ sp.codes <- readr::read_csv(file = here::here("code", "species_lengths.csv")) %>
 fma_l_data <- readr::read_csv(here::here("data", "fma_l_data.csv"))
 fma_w_data <- readr::read_csv(here::here("data", "fma_w_data.csv"))
 
-# 
-# dat <- specimen_data %>% 
-#   # TOLEDO!!! deal with freq
-#   dplyr::group_by(SRVY, species_code) %>% 
-#   dplyr::summarize(min = min(val, na.rm = TRUE), 
-#                    q1 = quantile(val, .025, na.rm = TRUE)#, 
-#                    # mean...
-#                    #median...
-#                    )
+
 
 # RACE Create Length Table -----------------------------------------------------
 
-test0 <-data.frame(
+race0 <-data.frame(
   race_code = 1.00,
   fma_code = 1.00,
   species_name = 1.00,
   r_l_count = 1.00,
   r_l_min = 1.00,
   r_l_max = 1.00,
-  r_l_q2_5 = 1.00,
-  r_l_q97_5 = 1.00)
-
+  r_l_95_lower = 1.00,
+  r_l_95_upper = 1.00)
 
 for(i in 1:nrow(sp.codes)){
   RACE <- sp.codes$race_species_code[i]
@@ -44,28 +35,28 @@ for(i in 1:nrow(sp.codes)){
     l_min <- (min(l_fish$val) / 10)
     l_max <- (max(l_fish$val) / 10)
     l_temp <- l_fish[rep(x = 1:nrow(l_fish), l_fish$frequency), ]
-    l_q2_5 <- (quantile(x = l_temp$val, probs = 0.025, na.rm = TRUE) / 10)
-    l_q97_5 <- (quantile(x = l_temp$val, probs = 0.975, na.rm = TRUE) / 10)
+    l_95_lower <- (quantile(x = l_temp$val, probs = 0.025, na.rm = TRUE) / 10)
+    l_95_upper <- (quantile(x = l_temp$val, probs = 0.975, na.rm = TRUE) / 10)
       
-    test0[i,] <- c(RACE, FMA, NAME, l_count, l_min, l_max, l_q2_5, l_q97_5)
+    race0[i,] <- c(RACE, FMA, NAME, l_count, l_min, l_max, l_95_lower, l_95_upper)
     }
   else 
-    test0[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA)
+    race0[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA)
 }
 
 
 
 # RACE Create Weight Table -----------------------------------------------------
 
-test1 <-data.frame(
+race1 <-data.frame(
   race_code = 1.00,
   fma_code = 1.00,
   species_name = 1.00,
   r_w_count = 1.00,
   r_w_min = 1.00,
   r_w_max = 1.00,
-  r_w_q2_5 = 1.00,
-  r_w_q97_5 = 1.00)
+  r_w_95_lower = 1.00,
+  r_w_95_upper = 1.00)
 
 for(i in 1:nrow(sp.codes)){
   RACE <- sp.codes$race_species_code[i]
@@ -82,35 +73,28 @@ for(i in 1:nrow(sp.codes)){
     w_min <- (min(w_fish$val) / 1000)
     w_max <- (max(w_fish$val) / 1000)
     w_temp <- w_fish[rep(x = 1:nrow(w_fish), w_fish$frequency), ]
-    w_q2_5 <- (quantile(x = w_temp$val, probs = 0.025, na.rm = TRUE) / 1000)
-    w_q97_5 <- (quantile(x = w_temp$val, probs = 0.975, na.rm = TRUE) / 1000)
+    w_95_lower <- (quantile(x = w_temp$val, probs = 0.025, na.rm = TRUE) / 1000)
+    w_95_upper <- (quantile(x = w_temp$val, probs = 0.975, na.rm = TRUE) / 1000)
     
-    test1[i,] <- c(RACE, FMA, NAME, w_count, w_min, w_max, w_q2_5, w_q97_5)
+    race1[i,] <- c(RACE, FMA, NAME, w_count, w_min, w_max, w_95_lower, w_95_upper)
   }
   else 
-    test1[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA)
+    race1[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA)
 }
 
-# RACE Combine tables and add date ---------------------------------------------
 
-# racecombined_l_w <- dplyr::left_join(x = test0, y = test1)
-# last_update <- data.frame(last_update = Sys.time())
-# norpac_table0 <- cbind(racecombined_l_w, last_update)
-# 
-# date <- Sys.Date()
-# write.csv(norpac_table0, here::here("output", "RACE_final_table.csv"))
 
 # FMA Create Length Table ------------------------------------------------------
 
-test2 <-data.frame(
+fma0 <-data.frame(
   race_code = 1.00,
   fma_code = 1.00,
   species_name = 1.00,
   f_l_count = 1.00,
   f_l_min = 1.00,
   f_l_max = 1.00,
-  f_l_q2_5 = 1.00,
-  f_l_q97_5 = 1.00)
+  f_l_95_lower = 1.00,
+  f_l_95_upper = 1.00)
 
 for(i in 1:nrow(sp.codes)){
   RACE <- sp.codes$race_species_code[i]
@@ -126,18 +110,18 @@ for(i in 1:nrow(sp.codes)){
     l_count <- nrow(l_fish)
     l_min <- min(l_fish$length_size)
     l_max <- max(l_fish$length_size)
-    l_q2_5 <- quantile(x = l_fish$length_size, probs = 0.025, na.rm = TRUE)
-    l_q97_5 <- quantile(x = l_fish$length_size, probs = 0.975, na.rm = TRUE)
+    l_95_lower <- quantile(x = l_fish$length_size, probs = 0.025, na.rm = TRUE)
+    l_95_upper <- quantile(x = l_fish$length_size, probs = 0.975, na.rm = TRUE)
     
-    test2[i,] <- c(RACE, FMA, NAME, l_count, l_min, l_max, l_q2_5, l_q97_5)
+    fma0[i,] <- c(RACE, FMA, NAME, l_count, l_min, l_max, l_95_lower, l_95_upper)
   }
   else 
-    test2[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA)
+    fma0[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA)
 }
 
 # FMA Create Weight Table ------------------------------------------------------
 
-test3 <-data.frame(
+fma1 <-data.frame(
   race_code = 1.00,
   fma_code = 1.00,
   species_name = 1.00,
@@ -146,8 +130,8 @@ test3 <-data.frame(
   f_w_count = 1.00,
   f_w_min = 1.00,
   f_w_max = 1.00,
-  f_w_q2_5 = 1.00,
-  f_w_q97_5 = 1.00)
+  f_w_95_lower = 1.00,
+  f_w_95_upper = 1.00)
 
 for(i in 1:nrow(sp.codes)){
   RACE <- sp.codes$race_species_code[i]
@@ -173,31 +157,65 @@ for(i in 1:nrow(sp.codes)){
     w_count <- nrow(w_fish)
     w_min <- min(w_fish$species_weight)
     w_max <- max(w_fish$species_weight)
-    w_q2_5 <- quantile(x = w_fish$species_weight, probs = 0.025, na.rm = TRUE)
-    w_q97_5 <- quantile(x = w_fish$species_weight, probs = 0.975, na.rm = TRUE)
+    w_95_lower <- quantile(x = w_fish$species_weight, probs = 0.025, na.rm = TRUE)
+    w_95_upper <- quantile(x = w_fish$species_weight, probs = 0.975, na.rm = TRUE)
     
-    test3[i,] <- c(RACE, FMA, NAME, w_fish_avg_ext, w_avg_raw, w_count, w_min, w_max, w_q2_5, w_q97_5)
-  }
+    fma1[i,] <- c(RACE, FMA, NAME, w_fish_avg_ext, w_avg_raw, w_count, w_min, w_max, w_95_lower, w_95_upper)
+    }
   else 
-    test3[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA, NA, NA)
+    fma1[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA, NA, NA)
 }
 
-# FMA Combine tables and add date ----------------------------------------------
 
-# fmacombined_l_w <- dplyr::left_join(x = test2, y = test3)
-# last_update <- data.frame(last_update = Sys.time())
-# norpac_table1 <- cbind(fmacombined_l_w, last_update)
-# 
-# date <- Sys.Date()
-# write.csv(norpac_table1, here::here("output", "FMA_final_table.csv"))
 
-# Combine all tables and add date ---------------------------------------------
+# Combine tables & add date ---------------------------------------------
 
-racecombined_l_w <- dplyr::left_join(x = test0, y = test1)
-fmacombined_l_w <- dplyr::left_join(x = test2, y = test3)
+racecombined_l_w <- dplyr::left_join(x = race0, y = race1)
+fmacombined_l_w <- dplyr::left_join(x = fma0, y = fma1)
 last_update <- data.frame(last_update = Sys.time())
 combined_l_w <- dplyr::left_join(x = racecombined_l_w, y = fmacombined_l_w)
 norpac_table <- cbind(combined_l_w, last_update)
 
-date <- Sys.Date()
-write.csv(norpac_table, here::here("output", "final_norpac_table.csv"))
+write.csv(norpac_table, here::here("output", "FMA_range_verification.csv"))
+
+
+# Connect to Oracle ------------------------------------------------------------
+source("https://raw.githubusercontent.com/afsc-gap-products/metadata/main/code/functions_oracle.R")
+library(getPass)
+library(RODBC)
+library(magrittr)
+library(dplyr)
+
+# Connect to Database
+get.connected <- function(schema='AFSC'){(echo=FALSE)
+  username <- getPass(msg = "Enter your ORACLE Username: ")
+  password <- getPass(msg = "Enter your ORACLE Password: ")
+  channel  <- RODBC::odbcConnect(paste(
+    schema),paste(username),paste(password), believeNRows=FALSE)
+}
+channel <- get.connected()
+
+# Upload data to oracle! -------------------------------------------------------
+
+file_paths <- data.frame(
+  file_path = here::here("output", "FMA_range_verification.csv"), 
+  table_metadata = c(Sys.Date()) 
+)
+
+# metadata_column = data.frame(
+#   metadata_colname = "DUMMY", 
+#   metadata_colname_long = "example dummy column", 
+#   metadata_units = "text", 
+#   metadata_datatype = "VARCHAR2(225 BYTE)", 
+#   metadata_colname_desc = "dummy.")
+
+oracle_upload(
+  file_paths = file_paths, 
+  channel = channel, 
+  metadata_column = metadata_column,
+  schema = "ANDERSONC")
+
+RODBC::sqlQuery(channel = channel,
+                  query = paste0('grant select on ANDERSONC.FMA_RANGE_VERIFICATION
+                                  to GAP_PRODUCTS, NORPAC;'))
+
