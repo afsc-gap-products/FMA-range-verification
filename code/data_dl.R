@@ -3,6 +3,8 @@
 sp.codes <- readr::read_csv(file = here::here("code", "species_lengths.csv")) %>% 
   janitor::clean_names()
 
+fma_date_start <- 2013
+fma_date_end <- 2023
 
 
 # Download cruise data ---------------------------------------------------------
@@ -29,7 +31,7 @@ cruise  <-
 
 
 
-# Download Length data ---------------------------------------------------------
+# Download Weight data ---------------------------------------------------------
 
 RACE_rawweight  <-
   RODBC::sqlQuery(channel,query = 
@@ -66,12 +68,11 @@ RACE_rawlength  <-
 
 fma_rawlength  <-
   RODBC::sqlQuery(channel,query = 
-                    paste0("SELECT * FROM NORPAC.ATL_LENGTH WHERE SPECIES_CODE IN (",
+                    paste0("SELECT * FROM OBSINT.debriefed_length WHERE year BETWEEN ",paste(fma_date_start, "AND", fma_date_end),"AND SPECIES IN (",
                            paste(sp.codes$fma_species_code, collapse = ", "),");")) %>% 
   janitor::clean_names()
 
 readr::write_csv(fma_rawlength, here::here("data", "fma_l_data.csv"))
-
 
 
 # Join RACE tables together ----------------------------------------------------
