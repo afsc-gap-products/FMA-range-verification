@@ -1,20 +1,14 @@
 ```{r, echo=FALSE, include=FALSE}
 RACE_rawlength  <- readr::read_csv(here::here("data", "specimen_data.csv"))
-  # sqlQuery(channel,query = paste0("SELECT * FROM RACE_DATA.V_EXTRACT_FINAL_LENGTHS A WHERE ((A.species_code = ",{{RACE}},"))"))
-
 FMA_rawlength  <- readr::read_csv(here::here("data", "fma_l_data.csv"))
-  # sqlQuery(channel,query = paste0("SELECT species_code, length, frequency  FROM NORPAC.ATL_LENGTH WHERE ((species_code = ",{{FMA}},"))"))
 
 RACE_rawlength <- RACE_rawlength %>% filter(species_code == {{RACE}})
 FMA_rawlength <- FMA_rawlength %>% filter(species == {{FMA}})
 
 
 evaltf <- ifelse(nrow(RACE_rawlength) > 0, TRUE, FALSE)
-
 str0 <- "This species does not have lengths in the database"
-
 evaltf <- ifelse(nrow(FMA_rawlength) > 0, TRUE, FALSE)
-
 str1 <- "This species does not have lengths in the database"
 
 ```

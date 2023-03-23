@@ -47,7 +47,7 @@ spcodes  <-
 # fmacodes  <-
 #   sqlQuery(channel,paste("SELECT * FROM NORPAC.ATL_LOV_SPECIES_CODE"))
 
-sp.code <- read.csv(here::here("species_lengths.csv"), header = TRUE)
+sp.code <- read.csv(here::here("code", "species_lengths.csv"), header = TRUE)
 ```
 
 ```{r run-child}
@@ -55,7 +55,7 @@ src <- list()
 for(i in 1:nrow(sp.code)){
   RACE <- sp.code$RACE.Species.Code[i]
   NAME <- sp.code$SPECIES_NAME[i]
-  src[[i]] <- knitr::knit_expand(here::here('04_weight-template.qmd'))
+  src[[i]] <- knitr::knit_expand(here::here("code", "PDF Code", '04_weight-template.qmd'))
 }
 ```
 
