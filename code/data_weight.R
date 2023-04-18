@@ -141,11 +141,11 @@ for(i in 1:nrow(sp.codes)){
   fma_w_data$species_avg <- 
     (fma_w_data$species_weight / fma_w_data$species_number) # adds average weight column of catch
   
-# get the average of the 'average weights' column.  
-  w_fish_1 <- fma_w_data %>% 
-    filter(species_code == FMA, species_number != 0) %>%
-    na.omit(w_fish_1)
-  w_fish_avg_ext <- mean(w_fish_1$species_weight)
+# # get the average of the 'average weights' column.  
+#   w_fish_1 <- fma_w_data %>% 
+#     filter(species_code == FMA, species_number != 0) %>%
+#     na.omit(w_fish_1)
+#   w_fish_avg_ext <- mean(w_fish_1$species_weight)
    
 # get all instances where species_number = 1 so all weights are for a specific fish    
   w_fish <- fma_w_data %>% 
@@ -160,7 +160,7 @@ for(i in 1:nrow(sp.codes)){
     w_95_lower <- quantile(x = w_fish$species_weight, probs = 0.025, na.rm = TRUE)
     w_95_upper <- quantile(x = w_fish$species_weight, probs = 0.975, na.rm = TRUE)
     
-    fma1[i,] <- c(RACE, FMA, NAME, w_fish_avg_ext, w_avg_raw, w_count, w_min, w_max, w_95_lower, w_95_upper)
+    fma1[i,] <- c(RACE, FMA, NAME, w_avg_raw, w_count, w_min, w_max, w_95_lower, w_95_upper)
     }
   else 
     fma1[i,] <- c(RACE, FMA, NAME, NA, NA, NA, NA, NA, NA, NA)
